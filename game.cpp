@@ -1,3 +1,8 @@
+// Lucas Wagler
+// Dr. Khadka
+// 2020-03-11
+// Tic-Tac-Toe with Victory Lines
+
 #include "game.h"
 
 game::game()

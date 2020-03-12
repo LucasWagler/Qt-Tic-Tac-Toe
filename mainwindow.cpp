@@ -1,25 +1,20 @@
+// Lucas Wagler
+// Dr. Khadka
+// 2020-03-11
+// Tic-Tac-Toe with Victory Lines
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "game.h"
 #include <string>
+#include <QMessageBox>
+#include <QApplication> // May not be needed; doesn't seem to affect functionality on my Manjaro Linux install
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-//    ui->pushButton0->setFlat(true);
-//    QBrush tb(Qt::transparent); // Transparent brush, solid pattern
-//    ui->pushButton0->setPalette(QPalette(tb, tb, tb, tb, tb, tb, tb, tb, tb)); // Set every color roles to the transparent brush
-//    ui->pushButton0->setText("X");
-//    QPushButton* helpButton = new QPushButton("Help");
-
-//    ui->tableView->setIndexWidget(model->index(position,COLUMN_NUMBER), helpButton);
-//    ui->label_2->setStyleSheet("color: rgba(0,0,0,0)");
-//    ui->label_2->lower();
-//    ui->label_2->raise();
-//    ui->label_2->setStyleSheet("color: rgba(255,0,0,1)");
-//    ui->pushButton_0->setEnabled(false);
     resetBoard();
 }
 
@@ -101,16 +96,19 @@ void MainWindow::update(int button)
                 ui->label->setText("TIE");
                 updateWinLine();
                 winnerFlag = true;
+                exitDialog();
                 break;
             case 1:
                 ui->label->setText("X wins!");
                 updateWinLine();
                 winnerFlag = true;
+                exitDialog();
                 break;
             case 2:
                 ui->label->setText("O wins!");
                 updateWinLine();
                 winnerFlag = true;
+                exitDialog();
                 break;
             default:
                 QString turn = (gameInstance.getTurn() == 1) ? "X" : "O";
@@ -156,6 +154,26 @@ void MainWindow::updateButton(int button)
         case 8:
             ui->pushButton_8->setText( butt_text );
             break;
+    }
+}
+
+void MainWindow::exitDialog()
+{
+    // Create dialog
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Quitting Time");
+    msgBox.setText("Thank you for playing. Sending you back to the real world...");
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+
+    // Check dialog choice
+    if( msgBox.exec() == QMessageBox::No )
+    {
+        QApplication::quit();
+    }
+    else
+    {
+        QApplication::quit();
     }
 }
 

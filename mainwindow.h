@@ -1,3 +1,8 @@
+// Lucas Wagler
+// Dr. Khadka
+// 2020-03-11
+// Tic-Tac-Toe with Victory Lines
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -42,5 +47,6 @@ private:
     void updateButton(int button);
     void resetBoard();
     void updateWinLine();
+    void exitDialog();
 };
 #endif // MAINWINDOW_H
