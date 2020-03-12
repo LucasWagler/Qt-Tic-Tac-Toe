@@ -14,6 +14,7 @@ public:
     int *getState();
     int getTurn();
     int winner();
+    int winResult();
 };
 
 #endif // GAME_H

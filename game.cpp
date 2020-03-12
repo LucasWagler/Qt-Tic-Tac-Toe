@@ -75,3 +75,48 @@ int game::winner()
     }
     return 0;
 }
+
+int game::winResult()
+{
+    // -1 = error
+    // 0 = horizontal top
+    // 3 = horizontal mid
+    // 6 = horizontal bottom
+    // 10 = vertical left
+    // 11 = vertical mid
+    // 12 = vertical right
+    // 20 = diagonal NW-SE
+    // 21 = diagonal NE-SW
+
+    // check horizontal 0
+    for (int i = 0; i < 9; i += 3)
+    {
+        if ( state[i] == state[i+1] and state[i] == state[i+2] and state[i] != 0)
+        {
+            return i;
+        }
+    }
+
+    // check vertical
+    for (int i = 0; i < 3; i++)
+    {
+        if ( state[i] == state[i+3] and state[i] == state[i+6] and state[i] != 0)
+        {
+            return i+10;
+        }
+    }
+
+    // check diagonal NW-SE
+    if ( state[0] == state[4] and state[0] == state[8] and state[0] != 0 )
+    {
+        return 20;
+    }
+
+    // check diagonal NE-SW
+    if ( state[2] == state[4] and state[2] == state[6] and state[2] != 0)
+    {
+        return 21;
+    }
+
+    return -1;
+}

@@ -3,8 +3,6 @@
 #include "game.h"
 #include <string>
 
-//game gameInstance;
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -17,6 +15,12 @@ MainWindow::MainWindow(QWidget *parent)
 //    QPushButton* helpButton = new QPushButton("Help");
 
 //    ui->tableView->setIndexWidget(model->index(position,COLUMN_NUMBER), helpButton);
+//    ui->label_2->setStyleSheet("color: rgba(0,0,0,0)");
+//    ui->label_2->lower();
+//    ui->label_2->raise();
+//    ui->label_2->setStyleSheet("color: rgba(255,0,0,1)");
+//    ui->pushButton_0->setEnabled(false);
+    resetBoard();
 }
 
 MainWindow::~MainWindow()
@@ -24,35 +28,93 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::resetBoard()
+{
+    ui->win0->setStyleSheet("color: rgba(0,0,0,0)");
+    ui->win0->lower();
+    ui->win3->setStyleSheet("color: rgba(0,0,0,0)");
+    ui->win3->lower();
+    ui->win6->setStyleSheet("color: rgba(0,0,0,0)");
+    ui->win6->lower();
+    ui->win10->setStyleSheet("color: rgba(0,0,0,0)");
+    ui->win10->lower();
+    ui->win11->setStyleSheet("color: rgba(0,0,0,0)");
+    ui->win11->lower();
+    ui->win12->setStyleSheet("color: rgba(0,0,0,0)");
+    ui->win12->lower();
+    ui->win20->setStyleSheet("color: rgba(0,0,0,0)");
+    ui->win20->lower();
+    ui->win21->setStyleSheet("color: rgba(0,0,0,0)");
+    ui->win21->lower();
+}
+
+void MainWindow::updateWinLine()
+{
+    int winResult = gameInstance.winResult();
+    switch(winResult) {
+        case 0:
+            ui->win0->raise();
+            ui->win0->setStyleSheet("color: rgba(238, 129, 99, 1)");
+            break;
+        case 3:
+            ui->win3->raise();
+            ui->win3->setStyleSheet("color: rgba(238, 129, 99, 1)");
+            break;
+        case 6:
+            ui->win6->raise();
+            ui->win6->setStyleSheet("color: rgba(238, 129, 99, 1)");
+            break;
+        case 10:
+            ui->win10->raise();
+            ui->win10->setStyleSheet("color: rgba(238, 129, 99, 1)");
+            break;
+        case 11:
+            ui->win11->raise();
+            ui->win11->setStyleSheet("color: rgba(238, 129, 99, 1)");
+            break;
+        case 12:
+            ui->win12->raise();
+            ui->win12->setStyleSheet("color: rgba(238, 129, 99, 1)");
+            break;
+        case 20:
+            ui->win20->raise();
+            ui->win20->setStyleSheet("color: rgba(238, 129, 99, 1)");
+            break;
+        case 21:
+            ui->win21->raise();
+            ui->win21->setStyleSheet("color: rgba(238, 129, 99, 1)");
+            break;
+    }
+}
+
 void MainWindow::update(int button)
 {
     gameInstance.click(button);
     int winner = gameInstance.winner();
+//    int winResult = gameInstance.winResult();
     static bool winnerFlag = false;
-//    updateButton(button);
     if (!winnerFlag)
     {
         updateButton(button);
         switch (winner) {
             case -1:
                 ui->label->setText("TIE");
-//                updateButton(button);
+                updateWinLine();
                 winnerFlag = true;
                 break;
             case 1:
                 ui->label->setText("X wins!");
-//                updateButton(button);
+                updateWinLine();
                 winnerFlag = true;
                 break;
             case 2:
                 ui->label->setText("O wins!");
-//                updateButton(button);
+                updateWinLine();
                 winnerFlag = true;
                 break;
             default:
                 QString turn = (gameInstance.getTurn() == 1) ? "X" : "O";
                 ui->label->setText("It's " + turn + "'s turn.");
-//                updateButton(button);
         }
     }
     winner = gameInstance.winner();
@@ -100,54 +162,45 @@ void MainWindow::updateButton(int button)
 
 void MainWindow::on_pushButton_0_clicked()
 {
-//    gameInstance.click(0);
     update(0);
 }
 
 void MainWindow::on_pushButton_1_clicked()
 {
-//    gameInstance.click(1);
     update(1);
 }
 
 void MainWindow::on_pushButton_2_clicked()
 {
-//    gameInstance.click(2);
     update(2);
 }
 
 void MainWindow::on_pushButton_3_clicked()
 {
-//    gameInstance.click(3);
     update(3);
 }
 
 void MainWindow::on_pushButton_4_clicked()
 {
-//    gameInstance.click(4);
     update(4);
 }
 
 void MainWindow::on_pushButton_5_clicked()
 {
-//    gameInstance.click(5);
     update(5);
 }
 
 void MainWindow::on_pushButton_6_clicked()
 {
-//    gameInstance.click(6);
     update(6);
 }
 
 void MainWindow::on_pushButton_7_clicked()
 {
-//    gameInstance.click(7);
     update(7);
 }
 
 void MainWindow::on_pushButton_8_clicked()
 {
-//    gameInstance.click(8);
     update(8);
 }

@@ -40,5 +40,7 @@ private:
     game gameInstance;
     void update(int button);
     void updateButton(int button);
+    void resetBoard();
+    void updateWinLine();
 };
 #endif // MAINWINDOW_H
