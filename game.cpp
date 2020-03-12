@@ -81,6 +81,7 @@ int game::winner()
     return 0;
 }
 
+// Dirty implementation for line drawing; could be combined with above winner()
 int game::winResult()
 {
     // -1 = error

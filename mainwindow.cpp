@@ -84,9 +84,10 @@ void MainWindow::updateWinLine()
 
 void MainWindow::update(int button)
 {
+    // Update game state with new click
     gameInstance.click(button);
+    // Check for win/end condition
     int winner = gameInstance.winner();
-//    int winResult = gameInstance.winResult();
     static bool winnerFlag = false;
     if (!winnerFlag)
     {
@@ -115,14 +116,11 @@ void MainWindow::update(int button)
                 ui->label->setText("It's " + turn + "'s turn.");
         }
     }
-    winner = gameInstance.winner();
-//    winner = gameInstance.winner();
-
-//    ui->pushButton_0->setText( butt_text );
 }
 
 void MainWindow::updateButton(int button)
 {
+    // Sets button text according to game state
     int *stateptr = gameInstance.getState();
     QString butt_text = (stateptr[button] == 1) ? "X" : "O";
     switch (button)
