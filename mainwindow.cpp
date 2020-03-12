@@ -1,21 +1,58 @@
-// Lucas Wagler
-// Dr. Khadka
-// 2020-03-11
-// Tic-Tac-Toe with Victory Lines
-
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "game.h"
-#include <string>
+#include <QDebug>
+#include <QKeyEvent>
+#include <random>
+#include "QDateTime"
+#include <QApplication>
 #include <QMessageBox>
-#include <QApplication> // May not be needed; doesn't seem to affect functionality on my Manjaro Linux install
+#include <QVector>
+#include <QPushButton>
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+
+QString snakeHeadDirection = "DOWN"; // direction snake is going
+
+int applex = 0; // x coordinate of apple
+int appley = 0; // y coordinate of apple
+
+char lastinput = 'S'; //last valid input that the snake will take, starts snake going down
+bool playing = true; //game still playing
+int MSbetweenFrames; //time between frames in milliseconds
+bool SpawnApple = true; //game needs to spawn apple next frame
+
+int score = 1;
+
+struct segment{
+    //current position of snake
+    int cx;
+    int cy;
+
+    //past position of snake
+    int px;
+    int py;
+};
+
+QVector<segment> snake;
+
+int getRand(int min, int max, unsigned int seed);
+void GameOverBox();
+void addSegment();
+void StartBox();
+
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    resetBoard();
+
+    //setup time between frames
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()),this,SLOT(myfunction()));
+    addSegment();
+    StartBox();
+    timer->start(MSbetweenFrames);
+
 }
 
 MainWindow::~MainWindow()
@@ -23,200 +60,239 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::resetBoard()
-{
-    ui->win0->setStyleSheet("color: rgba(0,0,0,0)");
-    ui->win0->lower();
-    ui->win3->setStyleSheet("color: rgba(0,0,0,0)");
-    ui->win3->lower();
-    ui->win6->setStyleSheet("color: rgba(0,0,0,0)");
-    ui->win6->lower();
-    ui->win10->setStyleSheet("color: rgba(0,0,0,0)");
-    ui->win10->lower();
-    ui->win11->setStyleSheet("color: rgba(0,0,0,0)");
-    ui->win11->lower();
-    ui->win12->setStyleSheet("color: rgba(0,0,0,0)");
-    ui->win12->lower();
-    ui->win20->setStyleSheet("color: rgba(0,0,0,0)");
-    ui->win20->lower();
-    ui->win21->setStyleSheet("color: rgba(0,0,0,0)");
-    ui->win21->lower();
-}
 
-void MainWindow::updateWinLine()
+void MainWindow::paintEvent(QPaintEvent *event)
 {
-    int winResult = gameInstance.winResult();
-    switch(winResult) {
-        case 0:
-            ui->win0->raise();
-            ui->win0->setStyleSheet("color: rgba(238, 129, 99, 1)");
-            break;
-        case 3:
-            ui->win3->raise();
-            ui->win3->setStyleSheet("color: rgba(238, 129, 99, 1)");
-            break;
-        case 6:
-            ui->win6->raise();
-            ui->win6->setStyleSheet("color: rgba(238, 129, 99, 1)");
-            break;
-        case 10:
-            ui->win10->raise();
-            ui->win10->setStyleSheet("color: rgba(238, 129, 99, 1)");
-            break;
-        case 11:
-            ui->win11->raise();
-            ui->win11->setStyleSheet("color: rgba(238, 129, 99, 1)");
-            break;
-        case 12:
-            ui->win12->raise();
-            ui->win12->setStyleSheet("color: rgba(238, 129, 99, 1)");
-            break;
-        case 20:
-            ui->win20->raise();
-            ui->win20->setStyleSheet("color: rgba(238, 129, 99, 1)");
-            break;
-        case 21:
-            ui->win21->raise();
-            ui->win21->setStyleSheet("color: rgba(238, 129, 99, 1)");
-            break;
-    }
-}
+    QPainter painter( this);
 
-void MainWindow::update(int button)
-{
-    // Update game state with new click
-    gameInstance.click(button);
-    // Check for win/end condition
-    int winner = gameInstance.winner();
-    static bool winnerFlag = false;
-    if (!winnerFlag)
+    //only draw frame if "playing"
+    if(playing)
     {
-        updateButton(button);
-        switch (winner) {
-            case -1:
-                ui->label->setText("TIE");
-                updateWinLine();
-                winnerFlag = true;
-                exitDialog();
-                break;
-            case 1:
-                ui->label->setText("X wins!");
-                updateWinLine();
-                winnerFlag = true;
-                exitDialog();
-                break;
-            case 2:
-                ui->label->setText("O wins!");
-                updateWinLine();
-                winnerFlag = true;
-                exitDialog();
-                break;
-            default:
-                QString turn = (gameInstance.getTurn() == 1) ? "X" : "O";
-                ui->label->setText("It's " + turn + "'s turn.");
+        //draw snake
+        int temp = 0;
+        while(temp < snake.size())
+        {
+            painter.setBrush( Qt::black );
+            painter.drawRect(snake[temp].cx, snake[temp].cy, 10, 10);
+            temp++;
         }
+
+        //spawn new apple
+        if(SpawnApple)
+        {
+            //spawn apple in random location
+            applex = getRand(1,28,1) * 10;
+            appley = getRand(1,28,2) * 10;
+
+            //make sure apple isn't in snake
+            temp = 0;
+            while(temp < snake.size())
+            {
+                //if apple spawns in snake, try another random location until apple is not in snake
+                if(applex == snake[temp].cx && appley == snake[temp].cy)
+                {
+                    applex = getRand(1,28,1) * 10;
+                    appley = getRand(1,28,2) * 10;
+                    temp = 0;
+                }
+                temp++;
+            }
+            SpawnApple = false;
+        }
+
+        //draw apple
+        painter.setBrush( Qt::red );
+        painter.drawRect(applex, appley, 10, 10);
     }
 }
 
-void MainWindow::updateButton(int button)
+//called every "MSbetweenFrames"
+void MainWindow::myfunction()
 {
-    // Sets button text according to game state
-    int *stateptr = gameInstance.getState();
-    QString butt_text = (stateptr[button] == 1) ? "X" : "O";
-    switch (button)
+    //mark current location as past location for each segment
+    int temp = 0;
+    while(temp < snake.size())
     {
-        case 0:
-            ui->pushButton_0->setText( butt_text );
-            break;
-        case 1:
-            ui->pushButton_1->setText( butt_text );
-            break;
-        case 2:
-            ui->pushButton_2->setText( butt_text );
-            break;
-        case 3:
-            ui->pushButton_3->setText( butt_text );
-            break;
-        case 4:
-            ui->pushButton_4->setText( butt_text );
-            break;
-        case 5:
-            ui->pushButton_5->setText( butt_text );
-            break;
-        case 6:
-            ui->pushButton_6->setText( butt_text );
-            break;
-        case 7:
-            ui->pushButton_7->setText( butt_text );
-            break;
-        case 8:
-            ui->pushButton_8->setText( butt_text );
-            break;
+        snake[temp].px = snake[temp].cx;
+        snake[temp].py = snake[temp].cy;
+        temp++;
     }
-}
 
-void MainWindow::exitDialog()
-{
-    // Create dialog
-    QMessageBox msgBox;
-    msgBox.setWindowTitle("Quitting Time");
-    msgBox.setText("Thank you for playing. Sending you back to the real world...");
-    msgBox.setStandardButtons(QMessageBox::Ok);
-    msgBox.setDefaultButton(QMessageBox::Ok);
-
-    // Check dialog choice
-    if( msgBox.exec() == QMessageBox::No )
+    //move snake head by last valid input
+    if(lastinput == 'W')
     {
-        QApplication::quit();
+        snake[0].cy += -10;
+        snakeHeadDirection = "UP";
+    }
+    else if(lastinput == 'S')
+    {
+        snake[0].cy += 10;
+        snakeHeadDirection = "DOWN";
+    }
+    else if(lastinput == 'A')
+    {
+        snake[0].cx += -10;
+        snakeHeadDirection = "LEFT";
     }
     else
     {
-        QApplication::quit();
+        snake[0].cx += 10;
+        snakeHeadDirection = "RIGHT";
+    }
+
+
+    //if snake head hits wall, end game
+    if(snake[0].cx >= 300 || snake[0].cx < 0 || snake[0].cy >= 300 || snake[0].cy < 0)
+    {
+        playing = false;
+        GameOverBox();
+    }
+
+
+    //if snake head eats apple
+    if(snake[0].cx == applex && snake[0].cy == appley)
+    {
+        SpawnApple = true;
+        score += 1;
+        addSegment();
+    }
+
+    //move rest of snake
+    temp = 1;
+    while(temp < snake.size())
+    {
+        snake[temp].cx = snake[temp - 1].px;
+        snake[temp].cy = snake[temp - 1].py;
+        temp++;
+    }
+
+    //if snake head runs into snake tail, end game
+    temp = 1;
+    while(temp < snake.size())
+    {
+        if(snake[0].cx == snake[temp].cx && snake[0].cy == snake[temp].cy)
+        {
+            playing = false;
+            GameOverBox();
+        }
+        temp++;
+    }
+
+    //update frame
+    update();
+}
+
+//runs every time any key is pressed
+void MainWindow::keyPressEvent(QKeyEvent *e)
+{
+    //get input
+    char currentinput = char(e->key());
+
+    //check for valid input
+    if(currentinput == 'W' || currentinput == 'S' || currentinput == 'A' || currentinput == 'D')
+    {
+        //don't allow snake to go backwards
+        if(snakeHeadDirection == "UP"       && currentinput == 'S') return;
+        if(snakeHeadDirection == "LEFT"     && currentinput == 'D') return;
+        if(snakeHeadDirection == "DOWN"     && currentinput == 'W') return;
+        if(snakeHeadDirection == "RIGHT"    && currentinput == 'A') return;
+
+        //assign new direction
+        lastinput = currentinput;
     }
 }
 
-
-void MainWindow::on_pushButton_0_clicked()
-{
-    update(0);
+//grab random number between two values. Also takes a seed as input.
+int getRand(int min, int max, unsigned int seed){
+    unsigned int ms = static_cast<unsigned>(QDateTime::currentMSecsSinceEpoch()) + seed;
+    std::mt19937 gen(ms);
+    std::uniform_int_distribution<> uid(min, max);
+    return uid(gen);
 }
 
-void MainWindow::on_pushButton_1_clicked()
+void GameOverBox()
 {
-    update(1);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Game Over!");
+    msgBox.setText("Your snake was: " + QString::number(score) + " segments long!\nThank you for playing. Do you want to play again?");
+    msgBox.setStandardButtons(QMessageBox::Yes);
+    msgBox.addButton(QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::No);
+
+    //if they want to play again, reset game
+    if(msgBox.exec() == QMessageBox::Yes)
+    {
+        //remove snake segments
+        int temp = snake.size();
+        while(temp > 0)
+        {
+            snake.pop_back();
+            temp--;
+        }
+        addSegment();
+
+        playing = true;
+        score = 1;
+        snake[0].cx = 10;
+        snake[0].cy = 10;
+        lastinput = 'S';
+        SpawnApple = true;
+
+
+    }
+    //else quit
+    else
+    {
+      QApplication::quit();
+    }
 }
 
-void MainWindow::on_pushButton_2_clicked()
+void StartBox()
 {
-    update(2);
+    qDebug() << "MsgBox opened";
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Snake Game");
+    msgBox.setText("Select your difficulty");
+
+
+    /*
+    msgBox.addButton(QMessageBox::Yes);
+    msgBox.addButton(QMessageBox::No);
+    msgBox.addButton(QMessageBox::Cancel);
+    msgBox.setDefaultButton(QMessageBox::Yes);
+
+
+    msgBox.setButtonText(QMessageBox::Yes, ("Slug"));
+    msgBox.setButtonText(QMessageBox::No, ("Worm"));
+    msgBox.setButtonText(QMessageBox::Cancel, ("Python"));
+*/
+    QAbstractButton *slugButton = msgBox.addButton("Slug", QMessageBox::ActionRole);
+    QAbstractButton *wormButton = msgBox.addButton("Worm", QMessageBox::ActionRole);
+    QAbstractButton *pythonButton = msgBox.addButton("Python", QMessageBox::ActionRole);
+
+    msgBox.exec();
+
+    if(msgBox.clickedButton() == slugButton)
+    {
+        MSbetweenFrames = 100;
+
+    }
+    else if(msgBox.clickedButton() == wormButton)
+    {
+        MSbetweenFrames = 75;
+
+    }
+    else if(msgBox.clickedButton() == pythonButton)
+    {
+        MSbetweenFrames = 50;
+
+    }
+
 }
 
-void MainWindow::on_pushButton_3_clicked()
+void addSegment()
 {
-    update(3);
+    segment newsegment;
+    snake.push_back(newsegment);
 }
 
-void MainWindow::on_pushButton_4_clicked()
-{
-    update(4);
-}
-
-void MainWindow::on_pushButton_5_clicked()
-{
-    update(5);
-}
-
-void MainWindow::on_pushButton_6_clicked()
-{
-    update(6);
-}
-
-void MainWindow::on_pushButton_7_clicked()
-{
-    update(7);
-}
-
-void MainWindow::on_pushButton_8_clicked()
-{
-    update(8);
-}
